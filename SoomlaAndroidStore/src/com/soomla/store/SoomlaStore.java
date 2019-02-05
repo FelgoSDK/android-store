@@ -202,23 +202,6 @@ public class SoomlaStore {
                                     BusProvider.getInstance().post(
                                             new RestoreTransactionsFinishedEvent(true));
                                 }
-                            }
-
-                            @Override
-                            public void fail(String message) {
-                                BusProvider.getInstance().post(new RestoreTransactionsFinishedEvent(false));
-                                handleErrorResult(UnexpectedStoreErrorEvent.ErrorCode.GENERAL, message);
-                            }
-
-                            @Override
-                            public void verificationStarted(List<IabPurchase> purchases) {
-                                handleVerificationStarted(purchases);
-                            }
-                        };
-
-                        IabCallbacks.OnRestorePurchasesListener restoreSubscriptionsListener = new IabCallbacks.OnRestorePurchasesListener() {
-                            @Override
-                            public void success(List<IabPurchase> purchases) {
 
                                 // collect subscription ids list
                                 List<String> subscriptionIds = new ArrayList<String>();
@@ -229,7 +212,7 @@ public class SoomlaStore {
                                 // collect subscriptionVG list
                                 List<VirtualGood> subscriptions = new ArrayList<VirtualGood>();
                                 for (VirtualGood good : StoreInfo.getGoods()) {
-                                    if ((good.getPurchaseType() instanceof PurchaseWithMarket) && ((PurchaseWithMarket)good.getPurchaseType()).isSubscription()) {
+                                    if ((good.getPurchaseType() instanceof PurchaseWithMarket) && ((PurchaseWithMarket) good.getPurchaseType()).isSubscription()) {
                                         subscriptions.add(good);
                                     }
                                 }
@@ -239,10 +222,10 @@ public class SoomlaStore {
                                     String productId = ((PurchaseWithMarket)subscription.getPurchaseType()).getMarketItem().getProductId();
                                     if (subscriptionIds.contains(productId)) {
                                         // TODO: is here should be 1 to give? Maybe current item has not only just 0/1 state
-                                        subscription.give(1, false);
+                                        subscription.give(1, true);
                                     } else {
                                         try {
-                                            subscription.take(StoreInventory.getVirtualItemBalance(subscription.getItemId()), false);
+                                            subscription.take(StoreInventory.getVirtualItemBalance(subscription.getItemId()), true);
                                         }
                                         catch (VirtualItemNotFoundException ex) {
                                             // possibly unreachable block
@@ -254,12 +237,13 @@ public class SoomlaStore {
 
                             @Override
                             public void fail(String message) {
-                                SoomlaUtils.LogDebug(TAG, "Subscriptions restoring failed: " + message);
+                                BusProvider.getInstance().post(new RestoreTransactionsFinishedEvent(false));
+                                handleErrorResult(UnexpectedStoreErrorEvent.ErrorCode.GENERAL, message);
                             }
 
                             @Override
                             public void verificationStarted(List<IabPurchase> purchases) {
-                                // should we do it in subscription restoring? possibly it should be empty
+                                handleVerificationStarted(purchases);
                             }
                         };
 
@@ -602,6 +586,15 @@ public class SoomlaStore {
 
     private void handleSuccessfulPurchases(List<IabPurchase> purchases, boolean isRestoring, HandleSuccessfulPurchasesFinishedHandler handler) {
         for (IabPurchase purchase : purchases) {
+            try {
+                PurchasableVirtualItem purchasableItem = StoreInfo.getPurchasableItem(purchase.getSku());
+                if (purchasableItem.getPurchaseType() instanceof PurchaseWithMarket && ((PurchaseWithMarket) purchasableItem.getPurchaseType()).isSubscription()) {
+                    // restoring subscriptions is handled separately
+                    continue;
+                }
+            } catch (VirtualItemNotFoundException e) {
+            }
+
             handleSuccessfulPurchase(purchase, isRestoring);
         }
 
