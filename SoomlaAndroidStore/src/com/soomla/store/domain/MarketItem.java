@@ -35,8 +35,9 @@ public class MarketItem {
      * @param productId the id of the current item in the market
      * @param price the actual $$ cost of the current item in the market
      */
-    public MarketItem(String productId, double price) {
+    public MarketItem(String productId, double price, boolean isSubscription) {
         this.mProductId = productId;
+        this.mIsSubscription = isSubscription;
         setPrice(price);
     }
 
@@ -55,6 +56,7 @@ public class MarketItem {
             this.mProductId = jsonObject.getString(StoreJSONConsts.MARKETITEM_PRODUCT_ID);
         }
 		setPrice(jsonObject.getDouble(StoreJSONConsts.MARKETITEM_PRICE));
+        this.mIsSubscription = jsonObject.optBoolean(StoreJSONConsts.MARKETITEM_IS_SUBSCRIPTION);
 
         this.mMarketPriceAndCurrency = jsonObject.optString(StoreJSONConsts.MARKETITEM_MARKETPRICE);
         this.mMarketTitle = jsonObject.optString(StoreJSONConsts.MARKETITEM_MARKETTITLE);
@@ -75,6 +77,7 @@ public class MarketItem {
 
             jsonObject.put(StoreJSONConsts.MARKETITEM_ANDROID_ID, mProductId);
             jsonObject.put(StoreJSONConsts.MARKETITEM_PRICE, Double.valueOf(getPrice()));
+            jsonObject.put(StoreJSONConsts.MARKETITEM_IS_SUBSCRIPTION, Boolean.valueOf(isSubscription()));
 
             jsonObject.put(StoreJSONConsts.MARKETITEM_MARKETPRICE, mMarketPriceAndCurrency);
             jsonObject.put(StoreJSONConsts.MARKETITEM_MARKETTITLE, mMarketTitle);
@@ -118,6 +121,10 @@ public class MarketItem {
         return getMarketPriceAndCurrency();
     }
 
+    public boolean isSubscription() {
+        return mIsSubscription;
+    }
+
     public String getMarketPriceAndCurrency() { return mMarketPriceAndCurrency; }
 
     public String getMarketTitle() {
@@ -144,6 +151,8 @@ public class MarketItem {
     private String mProductId; //id of this VirtualGood in the market
 
     private double mPrice; //the actual $$ cost of the current item in the market.
+
+    private boolean mIsSubscription;
 
     private String mMarketPriceAndCurrency;
 
