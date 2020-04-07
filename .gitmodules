@@ -1,3 +1,4 @@
 [submodule "submodules/soomla-android-core"]
 	path = submodules/soomla-android-core
-	url = https://github.com/soomla/soomla-android-core.git
+	# url = https://github.com/soomla/soomla-android-core.git
+	url = git@github.com:FelgoSDK/soomla-android-core.git
