@@ -1,0 +1,15 @@
+include ":SoomlaAndroidStore"
+
+// include core (necessary for building store) and the IAB implementations for Google Play and Amazon
+// (put those project repos next to the main project)
+def subProjects = ["submodules/soomla-android-core", "../android-store-google-play", "../android-store-amazon"]
+
+subProjects.each { it ->
+    def dir = file(it)
+
+    if(dir.exists()) {
+        def name = ":" + dir.name
+        include(name)
+        project(name).projectDir = dir
+    }
+}
